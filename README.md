@@ -36,8 +36,18 @@ Once published:
 npx create-fullstack-app my-app
 ```
 
-The CLI first runs the interactive create-fastapi-app prompts. **Keep "Enable authentication system" set to Yes**,
-since the frontend depends on it. It then generates the frontend and installs its dependencies.
+The CLI first asks whether you already have a backend:
+
+1. **No, create a new one**: runs the interactive create-fastapi-app prompts. **Keep "Enable authentication system"
+   set to Yes**, since the frontend depends on it. The result goes in `my-app/backend/`.
+2. **Yes, a local create-fastapi-app project**: you give its path. The CLI checks that it looks like a
+   create-fastapi-app project and that auth is enabled, then reads its `.env` for the app name and port.
+   The backend stays where it is, and `dev.sh` starts it from there.
+3. **Yes, a running backend URL**: the CLI probes `/api/health` and checks the schema for `/api/auth/login`.
+   Only the frontend is created, pointed at that URL.
+
+If a check fails you are asked whether to continue anyway. Then the frontend is generated and its dependencies
+installed.
 
 Start both servers:
 
@@ -48,26 +58,30 @@ cd my-app
 
 Open http://localhost:5173, register, and enter the verification code emailed by the backend.
 
+Skip the question with flags, e.g. `npx create-fullstack-app my-app --backend http://localhost:8000`.
+
 ### Flags
 
 | Flag | Effect |
 |---|---|
+| `--new-backend` | Create a new backend without asking |
+| `--backend <path\|url>` | Use an existing backend (local project path or running URL) without asking |
 | `--skip-install` | Don't run `npm install` in `frontend/` |
-| `--frontend-only` | Only generate the frontend (no `uv` needed) |
 | `--help` | Show usage |
 
 ## What Gets Generated
 
 ```
 my-app/
-  backend/    FastAPI, PostgreSQL, Alembic, auth, Docker, tests (from create-fastapi-app)
+  backend/    FastAPI, PostgreSQL, Alembic, auth, Docker, tests (only when you create a new backend)
   frontend/   Vite + React + Tailwind + TypeScript client
   dev.sh      Runs backend and frontend together (Ctrl+C stops both)
   README.md
 ```
 
 The frontend `.env` is generated from the backend's `.env`: the app name becomes the page title and UI name, and
-`FASTAPI_PORT` becomes the dev proxy target.
+`FASTAPI_PORT` becomes the dev proxy target (or the URL you gave in option 3). With an existing backend, add the
+frontend origin to its `CORS_ORIGINS` if you hit CORS errors outside the dev proxy.
 
 ## Frontend Features
 
